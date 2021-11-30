@@ -46,7 +46,7 @@ class_diag <- function(score, truth, positive, cutoff=.5){
 
 # Mining, Classification, Prediction
 
-## Name and EID here
+Krystal Li KML3695
 
 ### Introduction 
 
@@ -54,18 +54,39 @@ Paragraph or two introducing your datasets and variables, why they are interesti
 
 ```{R}
 library(tidyverse)
-# read your datasets in here, e.g., with read_csv()
-
-# if your dataset needs tidying, do so here
-
-# any other code here
+starbucks <- read_csv("~/project2/starbucks.csv")
+starbucks <- starbucks %>% mutate(highcals = ifelse(calories>mean(calories), "true", "false"))
+starbucks <- starbucks %>% select(item:highcals)
 ```
+
+
 
 ### Cluster Analysis
 
 ```{R}
 library(cluster)
-# clustering code here
+
+sil_width<-vector()
+clust_dat <- starbucks %>% select(calories,fat,carb,fiber,protein)
+for(i in 2:10){  
+kms <- kmeans(clust_dat,centers=i) 
+sil <- silhouette(kms$cluster,dist(clust_dat)) 
+sil_width[i]<-mean(sil[,3])
+}
+ggplot()+geom_line(aes(x=1:10,y=sil_width))+scale_x_continuous(name="k",breaks=1:10)
+
+starbucks_pam <-clust_dat %>% pam(k=3)
+starbucks_pam
+
+plot(starbucks_pam, which=2)
+
+starbucks%>%slice(starbucks_pam$id.med)
+
+library(GGally)
+starbucks%>%mutate(cluster=as.factor(starbucks_pam$clustering))%>%
+ggpairs(columns = 2:6,aes(color=cluster))
+
+
 ```
 
 Discussion of clustering here
@@ -74,7 +95,16 @@ Discussion of clustering here
 ### Dimensionality Reduction with PCA
 
 ```{R}
-# PCA code here
+starbucks_num <- starbucks%>%select(calories:protein)
+starbucks_pca<-princomp(starbucks_num,cor=T)
+starbucks_pca
+summary(starbucks_pca, loadings=T)
+starbucks_pca$scores %>% cor() %>% round(5)
+
+starbucks_pcadf <- data.frame(starbucks_pca$scores)
+pcaggplot <- data.frame(Name = starbucks_pcadf, PC1 = starbucks_pca$scores[, 1], PC2 = starbucks_pca$scores[, 2])
+pcaggplot %>% ggplot(aes(PC1, PC2)) + 
+geom_point(color="magenta") 
 ```
 
 Discussions of PCA here. 
@@ -82,11 +112,30 @@ Discussions of PCA here.
 ###  Linear Classifier
 
 ```{R}
-# linear classifier code here
+fit <-glm(highcals=="true" ~ carb + fiber + protein, data=starbucks, family="binomial")
+score<-predict(fit,type="response")
+class_diag(score,starbucks$highcals,positive="true")
 ```
+for logistic regression, could not use calories or fat because perfect predictors
+
 
 ```{R}
-# cross-validation of linear classifier here
+k = 10
+data <- sample_frac(starbucks)  
+folds <- rep(1:k, length.out = nrow(data))
+
+diags <- NULL
+
+i = 1
+for (i in 1:k) {
+train <- data[folds != i, ]
+test <- data[folds == i, ]
+truth <- test$highcals
+fit <- glm(highcals=="true" ~ carb + fiber + protein, data=starbucks, family="binomial")
+probs <- predict(fit, newdata = test, type = "response")
+diags <- rbind(diags, class_diag(probs, truth, positive = "true"))
+}
+summarize_all(diags, mean)
 ```
 
 Discussion here
