@@ -50,16 +50,16 @@ Krystal Li KML3695
 
 ### Introduction 
 
-Paragraph or two introducing your datasets and variables, why they are interesting to you, etc. See instructions for more information
+I chose this data solely because I am a Starbucks fan - I found this data on the Vincentarelbundock website, and chose to go with it because I thought it would be interesting to analyze the different foods at Starbucks. The variables measured are as follows: item, calories, fat, carb, fiber, protein, and type. I made a separate categorical column called highcals, that denotes whether the item is high in calories or not, based on if it was higher than the mean of the calories. There are 77 observations, 48 of which are high calories and 29 of which are not. 
 
 ```{R}
 library(tidyverse)
 starbucks <- read_csv("~/project2/starbucks.csv")
 starbucks <- starbucks %>% mutate(highcals = ifelse(calories>mean(calories), "true", "false"))
 starbucks <- starbucks %>% select(item:highcals)
+starbucks %>% select(highcals) %>% filter(highcals=="true") %>% summarize(n=n())
+starbucks %>% select(highcals) %>% filter(highcals=="false") %>% summarize(n=n())
 ```
-
-
 
 ### Cluster Analysis
 
@@ -144,11 +144,30 @@ Discussion here
 
 ```{R}
 library(caret)
-# non-parametric classifier code here
+knn_fit <- knn3(highcals == "true" ~ carb + fiber + protein, data = starbucks)
+prob_knn <- predict(knn_fit, newdata = starbucks)
+class_diag(prob_knn[, 2], starbucks$highcals, positive = "true")
 ```
 
 ```{R}
-# cross-validation of np classifier here
+k = 10
+data <- sample_frac(starbucks) 
+folds <- rep(1:k, length.out = nrow(data))  
+diags <- NULL
+i = 1
+for (i in 1:k) {
+train <- data[folds != i, ]
+test <- data[folds == i, ]
+truth <- test$highcals
+fit <- knn3(highcals == "true" ~ carb + fiber + protein, data = starbucks)
+probs <- predict(fit, newdata = test)[, 2]
+diags <- rbind(diags, class_diag(probs, truth, positive = "true"))
+}
+summarize_all(diags, mean)
+
+library(rpart); library(rpart.plot)
+fit <-rpart(calories~ fat + carb + fiber + protein + type, data=starbucks)
+rpart.plot(fit)
 ```
 
 Discussion
@@ -157,7 +176,25 @@ Discussion
 ### Regression/Numeric Prediction
 
 ```{R}
-# regression model code here
+fit1<-lm(calories~ fat + carb + fiber + protein + type, data=starbucks)
+yhat<-predict(fit1)
+mean((starbucks$calories-yhat)^2)
+
+k=5 
+data<-starbucks[sample(nrow(starbucks)),] 
+folds<-cut(seq(1:nrow(starbucks)),breaks=k,labels=F)
+diags<-NULL
+for(i in 1:k){
+train<-data[folds!=i,]
+test<-data[folds==i,]
+fit<-lm(calories~ fat + carb + fiber + protein + type, data=starbucks)
+yhat<-predict(fit,newdata=test)
+diags<-mean((starbucks$calories-yhat)^2) 
+}
+
+cv <- trainControl(method="cv", number = 5, classProbs = T, savePredictions = T)
+fit <- train(calories~ fat + carb + fiber + protein + type, data=starbucks, trControl=cv, method="knn")
+fit$results$RMSE^2
 ```
 
 ```{R}
