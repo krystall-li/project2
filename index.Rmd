@@ -151,6 +151,7 @@ knn_fit <- knn3(highcals == "true" ~ carb + fiber + protein, data = starbucks)
 prob_knn <- predict(knn_fit, newdata = starbucks)
 class_diag(prob_knn[, 2], starbucks$highcals, positive = "true")
 ```
+The model is demonstrated to be doing really well, with an AUC of 0.9353 can be translated to an A). 
 
 ```{R}
 k = 10
@@ -167,13 +168,17 @@ probs <- predict(fit, newdata = test)[, 2]
 diags <- rbind(diags, class_diag(probs, truth, positive = "true"))
 }
 summarize_all(diags, mean)
+```
 
+Again, this model shows that when ran with a k-fold CV, it does better due to the higher AUC value (0.95). This means that there is no overfitting, as the value is higher when ran with a k-fold. This nonparametric model does better than the previous linear model, as the AUC scores are higher (in regards to its cross validation performance).
+
+```{R}
 library(rpart); library(rpart.plot)
 fit <-rpart(calories~ fat + carb + fiber + protein + type, data=starbucks)
 rpart.plot(fit)
 ```
 
-Discussion
+I also ran a classification tree so that things could be visualized! 
 
 
 ### Regression/Numeric Prediction
@@ -194,17 +199,11 @@ fit<-lm(calories~ fat + carb + fiber + protein + type, data=starbucks)
 yhat<-predict(fit,newdata=test)
 diags<-mean((starbucks$calories-yhat)^2) 
 }
+mean(diags)
 
-cv <- trainControl(method="cv", number = 5, classProbs = T, savePredictions = T)
-fit <- train(calories~ fat + carb + fiber + protein + type, data=starbucks, trControl=cv, method="knn")
-fit$results$RMSE^2
 ```
 
-```{R}
-# cross-validation of regression model here
-```
-
-Discussion
+Here, I found the mean squared error (MSE), which was 93.06924. The smaller the number the better, so this number was not necessarily great. I then ran a k-fold CV on this same model, which had a value of 19262.54. The MSE was higher in CV, which is not good, as it shows that there is over fitting. 
 
 ### Python 
 
