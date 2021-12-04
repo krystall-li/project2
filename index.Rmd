@@ -89,12 +89,14 @@ ggpairs(columns = 2:6,aes(color=cluster))
 
 ```
 
-Discussion of clustering here
-    
+I clustered based on my numeric variables, which included calories, fat, carb, fiber, and protein (measured in terms of how many calories and then how many grams of everything else).The best number to use to cluster for PAM was 3, and that was when the silhouette width was at its highest as well. This was found by using the silhouette width (we choose the highest point as stated before). The width was around 0.79, compared to the average of 0.58, which indicated that a strong structure had been found. After using both the plots I ran the ggpairs to see the correlation, and the data indicated that the highest correlation was between fat and calories (0.759), while the lowest correlation was carb and protein (-0.583). I also then found the final medoids that are most representative of their cluster
+
+The purpose of clustering is to be able to group our data by patterns, and then to group them by those patterns. We can see then what features appear together, and what characterizes a group within the data frame. The 3 medoids that we see in the final slice are Roasted Vegetable Panini, Maple Oat Pecan Scone, and the Tiramisu Cake Pop, which means that those 3 food items are most representative of the final groups that we clustered. 
     
 ### Dimensionality Reduction with PCA
 
 ```{R}
+
 starbucks_num <- starbucks%>%select(calories:protein)
 starbucks_pca<-princomp(starbucks_num,cor=T)
 starbucks_pca
@@ -105,9 +107,11 @@ starbucks_pcadf <- data.frame(starbucks_pca$scores)
 pcaggplot <- data.frame(Name = starbucks_pcadf, PC1 = starbucks_pca$scores[, 1], PC2 = starbucks_pca$scores[, 2])
 pcaggplot %>% ggplot(aes(PC1, PC2)) + 
 geom_point(color="magenta") 
+
+plot(starbucks_pam, which=1)
 ```
 
-Discussions of PCA here. 
+I performed PCA on my data, using the numeric values (calories,carb,fat,fiber,and protein). If we look at just PC1 and PC2, we cand determine the following: for PC1, that a high score would mean a high score in all the categories (calories, fat, carb, fiber, and protien). For PC2, a high score would mean a high score in calories, fat, carb, but a low score in fiber and protein. I also then ran a scores matrix and rounded it to demonstrate that the 6 principal components were unrelated to each other. The PCA reveals the underlying structure of our data, and the graph between PC1 and PC2 demonstrates that there not necessarily a direct relationship involved. To find the amount that the PCs contribute to the total variance, we run a plot that tells us the amount of point variability explained by the 2 PCs, which is 72.38%. 
 
 ###  Linear Classifier
 
@@ -116,8 +120,7 @@ fit <-glm(highcals=="true" ~ carb + fiber + protein, data=starbucks, family="bin
 score<-predict(fit,type="response")
 class_diag(score,starbucks$highcals,positive="true")
 ```
-for logistic regression, could not use calories or fat because perfect predictors
-
+For logistic regression, I could not use calories or fat because they were both perfect predictors. From here, we can see that the AUC is 0.7963, which means that the model is doing ok - not great, but not horrible. (According to Dr.Woodward's slides, a 0.7963 would be the equivalent of a C+, almost a B).
 
 ```{R}
 k = 10
@@ -138,7 +141,7 @@ diags <- rbind(diags, class_diag(probs, truth, positive = "true"))
 summarize_all(diags, mean)
 ```
 
-Discussion here
+We can see here that our model is doing better now that we have ran it with a k-fold CV. It is at a 0.8211, which is also not a superb score, but an improvement from 0.7963. It is not showing signs of overfitting because it is improving when we run it with a k-fold (which means that we are randomly splitting up the data into subsets, which shows us if our data is overfitting if the k-fold score is lower).
 
 ### Non-Parametric Classifier
 
@@ -207,10 +210,11 @@ Discussion
 
 ```{R}
 library(reticulate)
+
 ```
 
 ```{python}
-# python code here
+
 ```
 
 Discussion
