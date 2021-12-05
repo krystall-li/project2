@@ -108,10 +108,14 @@ pcaggplot <- data.frame(Name = starbucks_pcadf, PC1 = starbucks_pca$scores[, 1],
 pcaggplot %>% ggplot(aes(PC1, PC2)) + 
 geom_point(color="magenta") 
 
-plot(starbucks_pam, which=1)
+eigval<-starbucks_pca$sdev^2
+varprop=round(eigval/sum(eigval), 2)
+ggplot() + geom_bar(aes(y=varprop, x=1:5), stat="identity") + xlab("") + geom_path(aes(y=varprop, x=1:5)) + 
+geom_text(aes(x=1:5, y=varprop, label=round(varprop, 2)), vjust=1, col="white", size=5) + scale_y_continuous(breaks=seq(0, .6, .2), labels = scales::percent) + 
+scale_x_continuous(breaks=1:10)
 ```
 
-I performed PCA on my data, using the numeric values (calories,carb,fat,fiber,and protein). If we look at just PC1 and PC2, we cand determine the following: for PC1, that a high score would mean a high score in all the categories (calories, fat, carb, fiber, and protien). For PC2, a high score would mean a high score in calories, fat, carb, but a low score in fiber and protein. I also then ran a scores matrix and rounded it to demonstrate that the 6 principal components were unrelated to each other. The PCA reveals the underlying structure of our data, and the graph between PC1 and PC2 demonstrates that there not necessarily a direct relationship involved. To find the amount that the PCs contribute to the total variance, we run a plot that tells us the amount of point variability explained by the 2 PCs, which is 72.38%. 
+I performed PCA on my data, using the numeric values (calories,carb,fat,fiber,and protein). If we look at just PC1 and PC2, we cand determine the following: for PC1, that a high score would mean a high score in all the categories (calories, fat, carb, fiber, and protien). For PC2, a high score would mean a high score in calories, fat, carb, but a low score in fiber and protein. I also then ran a scores matrix and rounded it to demonstrate that the 6 principal components were unrelated to each other. The PCA reveals the underlying structure of our data, and the graph between PC1 and PC2 demonstrates that there not necessarily a direct relationship involved. To find the amount that the PCs contribute to the total variance, we run a plot that tells us the amount of point variability explained by the 2 PCs, which is 73%. The elbow seems to be at 3 PCs, so I went with 2. 
 
 ###  Linear Classifier
 
