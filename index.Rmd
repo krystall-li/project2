@@ -55,10 +55,11 @@ I chose this data solely because I am a Starbucks fan - I found this data on the
 ```{R}
 library(tidyverse)
 starbucks <- read_csv("~/project2/starbucks.csv")
-starbucks <- starbucks %>% mutate(highcals = ifelse(calories>mean(calories), "true", "false"))
-starbucks <- starbucks %>% select(item:highcals)
-starbucks %>% select(highcals) %>% filter(highcals=="true") %>% summarize(n=n())
-starbucks %>% select(highcals) %>% filter(highcals=="false") %>% summarize(n=n())
+starbucks <- starbucks %>% mutate(highcals = ifelse(calories>mean(calories), "TRUE", "FALSE"))
+highcals2 <- as.integer(as.factor(starbucks$highcals))
+starbucks <- starbucks %>% mutate(highcals2)
+starbucks %>% select(highcals) %>% filter(highcals2=="2") %>% summarize(n=n())
+starbucks %>% select(highcals) %>% filter(highcals2=="1") %>% summarize(n=n())
 ```
 
 ### Cluster Analysis
@@ -84,7 +85,7 @@ starbucks%>%slice(starbucks_pam$id.med)
 
 library(GGally)
 starbucks%>%mutate(cluster=as.factor(starbucks_pam$clustering))%>%
-ggpairs(columns = 2:6,aes(color=cluster))
+ggpairs(columns = 3:7,aes(color=cluster))
 
 
 ```
@@ -115,16 +116,18 @@ geom_text(aes(x=1:5, y=varprop, label=round(varprop, 2)), vjust=1, col="white", 
 scale_x_continuous(breaks=1:10)
 ```
 
-I performed PCA on my data, using the numeric values (calories,carb,fat,fiber,and protein). If we look at just PC1 and PC2, we cand determine the following: for PC1, that a high score would mean a high score in all the categories (calories, fat, carb, fiber, and protien). For PC2, a high score would mean a high score in calories, fat, carb, but a low score in fiber and protein. I also then ran a scores matrix and rounded it to demonstrate that the 6 principal components were unrelated to each other. The PCA reveals the underlying structure of our data, and the graph between PC1 and PC2 demonstrates that there not necessarily a direct relationship involved. To find the amount that the PCs contribute to the total variance, we run a plot that tells us the amount of point variability explained by the 2 PCs, which is 73%. The elbow seems to be at 3 PCs, so I went with 2. 
+I performed PCA on my data, using the numeric values (calories,carb,fat,fiber,and protein). If we look at just PC1 and PC2, we can determine the following: for PC1, that a high score would mean a high score in all the categories (calories, fat, carb, fiber, and protein). For PC2, a high score would mean a high score in calories, fat, carb, but a low score in fiber and protein. I also then ran a scores matrix and rounded it to demonstrate that the 6 principal components were unrelated to each other. The PCA reveals the underlying structure of our data, and the graph between PC1 and PC2 demonstrates that there not necessarily a direct relationship involved. To find the amount that the PCs contribute to the total variance, we run a plot that tells us the amount of point variability explained by the 2 PCs, which is 73%. The elbow seems to be at 3 PCs, so I went with 2. 
 
 ###  Linear Classifier
 
 ```{R}
-fit <-glm(highcals=="true" ~ carb + fiber + protein, data=starbucks, family="binomial")
+fit <-glm(highcals=="TRUE" ~ carb + fiber + protein, data=starbucks, family="binomial")
 score<-predict(fit,type="response")
-class_diag(score,starbucks$highcals,positive="true")
+class_diag(score,starbucks$highcals,positive="TRUE")
+
+table(truth= factor(starbucks$highcals2==2, levels=c("TRUE","FALSE")),prediction= factor(score>.5, levels=c("TRUE","FALSE")))
 ```
-For logistic regression, I could not use calories or fat because they were both perfect predictors. From here, we can see that the AUC is 0.7963, which means that the model is doing ok - not great, but not horrible. (According to Dr.Woodward's slides, a 0.7963 would be the equivalent of a C+, almost a B).
+For logistic regression, I could not use calories or fat because they were both perfect predictors. From here, we can see that the AUC is 0.8211, which means that the model is doing ok - not super great, but not horrible. (According to Dr.Woodward's slides, a 0.7963 would be the equivalent of a B).
 
 ```{R}
 k = 10
@@ -138,22 +141,24 @@ for (i in 1:k) {
 train <- data[folds != i, ]
 test <- data[folds == i, ]
 truth <- test$highcals
-fit <- glm(highcals=="true" ~ carb + fiber + protein, data=starbucks, family="binomial")
+fit <- glm(highcals=="TRUE" ~ carb + fiber + protein, data=starbucks, family="binomial")
 probs <- predict(fit, newdata = test, type = "response")
-diags <- rbind(diags, class_diag(probs, truth, positive = "true"))
+diags <- rbind(diags, class_diag(probs, truth, positive = "TRUE"))
 }
 summarize_all(diags, mean)
 ```
 
-We can see here that our model is doing better now that we have ran it with a k-fold CV. It is at a 0.8211, which is also not a superb score, but an improvement from 0.7963. It is not showing signs of overfitting because it is improving when we run it with a k-fold (which means that we are randomly splitting up the data into subsets, which shows us if our data is overfitting if the k-fold score is lower).
+We can see here that our model is doing better now that we have ran it with a k-fold CV. It is at a 0.8211, which is also not a superb score, but an improvement from 0.8211. It is not showing signs of overfitting because it is improving when we run it with a k-fold (which means that we are randomly splitting up the data into subsets, which shows us if our data is overfitting if the k-fold score is lower).
 
 ### Non-Parametric Classifier
 
 ```{R}
 library(caret)
-knn_fit <- knn3(highcals == "true" ~ carb + fiber + protein, data = starbucks)
+knn_fit <- knn3(highcals2 == "2" ~ carb + fiber + protein, data = starbucks)
 prob_knn <- predict(knn_fit, newdata = starbucks)
-class_diag(prob_knn[, 2], starbucks$highcals, positive = "true")
+class_diag(prob_knn[, 2], starbucks$highcals, positive = "TRUE")
+
+table(truth= factor(starbucks$highcals2==2, levels=c("TRUE","FALSE")),prediction= factor(prob_knn[,1]>.5, levels=c("TRUE","FALSE")))
 ```
 The model is demonstrated to be doing really well, with an AUC of 0.9353 can be translated to an A). 
 
@@ -167,14 +172,14 @@ for (i in 1:k) {
 train <- data[folds != i, ]
 test <- data[folds == i, ]
 truth <- test$highcals
-fit <- knn3(highcals == "true" ~ carb + fiber + protein, data = starbucks)
+fit <- knn3(highcals == "TRUE" ~ carb + fiber + protein, data = starbucks)
 probs <- predict(fit, newdata = test)[, 2]
-diags <- rbind(diags, class_diag(probs, truth, positive = "true"))
+diags <- rbind(diags, class_diag(probs, truth, positive = "TRUE"))
 }
 summarize_all(diags, mean)
 ```
 
-Again, this model shows that when ran with a k-fold CV, it does better due to the higher AUC value (0.95). This means that there is no overfitting, as the value is higher when ran with a k-fold. This nonparametric model does better than the previous linear model, as the AUC scores are higher (in regards to its cross validation performance).
+Again, this model shows that when ran with a k-fold CV, it does better due to the higher AUC value (0.93584). This means that there is no overfitting, as the value is higher when ran with a k-fold. This nonparametric model does better than the previous linear model, as the AUC scores are higher (in regards to its cross validation performance).
 
 ```{R}
 library(rpart); library(rpart.plot)
@@ -207,12 +212,11 @@ mean(diags)
 
 ```
 
-Here, I found the mean squared error (MSE), which was 93.06924. The smaller the number the better, so this number was not necessarily great. I then ran a k-fold CV on this same model, which had a value of 19262.54. The MSE was higher in CV, which is not good, as it shows that there is over fitting. 
+Here, I found the mean squared error (MSE), which was 93.06924. The smaller the number the better, so this number was not necessarily great. I then ran a k-fold CV on this same model, which had a value of 17922.6. The MSE was higher in CV, which is not good, as it shows that there is over fitting. 
 
 ### Python 
 
 ```{R}
-library(reticulate)
 
 ```
 
@@ -220,11 +224,14 @@ library(reticulate)
 
 ```
 
+```{R}
+
+```
 Discussion
 
 ### Concluding Remarks
 
-Include concluding remarks here, if any
+This project taught me a lot about data manipulation! It is an extension of my first project, though using different data. Project 1 was a base level of the skills that we used, and project 2 really expanded on the aspect of data manipulation to gather information which was so cool! 
 
 
 
