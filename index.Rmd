@@ -50,7 +50,7 @@ Krystal Li KML3695
 
 ### Introduction 
 
-I chose this data solely because I am a Starbucks fan - I found this data on the Vincentarelbundock website, and chose to go with it because I thought it would be interesting to analyze the different foods at Starbucks. The variables measured are as follows: item, calories, fat, carb, fiber, protein, and type. I made a separate categorical column called highcals, that denotes whether the item is high in calories or not, based on if it was higher than the mean of the calories. There are 77 observations, 48 of which are high calories and 29 of which are not. 
+I chose this data solely because I am a Starbucks fan - I found this data on the Vincentarelbundock website, and chose to go with it because I thought it would be interesting to analyze the different foods at Starbucks. The variables measured are as follows: item, calories, fat, carb, fiber, protein, and type. I made a separate categorical column called highcals, that denotes whether the item is high in calories or not, based on if it was higher than the mean of the calories. There are 77 observations, 48 of which are high calories and 29 of which are not. I also created a column called highcals2, which codes whether the food items are high calories or not with 1 and 2, so that it can be used for a confusion matrix later on. 
 
 ```{R}
 library(tidyverse)
@@ -60,6 +60,7 @@ highcals2 <- as.integer(as.factor(starbucks$highcals))
 starbucks <- starbucks %>% mutate(highcals2)
 starbucks %>% select(highcals) %>% filter(highcals2=="2") %>% summarize(n=n())
 starbucks %>% select(highcals) %>% filter(highcals2=="1") %>% summarize(n=n())
+starbucks %>% head()
 ```
 
 ### Cluster Analysis
@@ -148,7 +149,7 @@ diags <- rbind(diags, class_diag(probs, truth, positive = "TRUE"))
 summarize_all(diags, mean)
 ```
 
-We can see here that our model is doing better now that we have ran it with a k-fold CV. It is at a 0.8211, which is also not a superb score, but an improvement from 0.8211. It is not showing signs of overfitting because it is improving when we run it with a k-fold (which means that we are randomly splitting up the data into subsets, which shows us if our data is overfitting if the k-fold score is lower).
+We can see here that our model is doing better now that we have ran it with a k-fold CV. It is at a 0.83833, which is also not a superb score, but an improvement from 0.8211. It is not showing signs of overfitting because it is improving when we run it with a k-fold (which means that we are randomly splitting up the data into subsets, which shows us if our data is overfitting if the k-fold score is lower).
 
 ### Non-Parametric Classifier
 
