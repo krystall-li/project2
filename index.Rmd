@@ -150,7 +150,7 @@ diags <- rbind(diags, class_diag(probs, truth, positive = "TRUE"))
 summarize_all(diags, mean)
 ```
 
-We can see here that our model is doing better now that we have ran it with a k-fold CV. It is at a 0.83833, which is also not a superb score, but an improvement from 0.8211. It is not showing signs of overfitting because it is improving when we run it with a k-fold (which means that we are randomly splitting up the data into subsets, which shows us if our data is overfitting if the k-fold score is lower).
+We can see here that our model is doing better now that we have ran it with a k-fold CV. It is also not a superb score, but an improvement from 0.8211. It is not showing signs of overfitting because it is improving when we run it with a k-fold (which means that we are randomly splitting up the data into subsets, which shows us if our data is overfitting if the k-fold score is lower).
 
 ### Non-Parametric Classifier
 
@@ -181,7 +181,7 @@ diags <- rbind(diags, class_diag(probs, truth, positive = "TRUE"))
 summarize_all(diags, mean)
 ```
 
-Again, this model shows that when ran with a k-fold CV, it does better due to the higher AUC value (0.93584). This means that there is no overfitting, as the value is higher when ran with a k-fold. This nonparametric model does better than the previous linear model, as the AUC scores are higher (in regards to its cross validation performance).
+Again, this model shows that when ran with a k-fold CV, it does better than the previous AUC score. This means that there is no overfitting, as the value is higher when ran with a k-fold. This nonparametric model does better than the previous linear model, as the AUC scores are higher (in regards to its cross validation performance).
 
 ```{R}
 library(rpart); library(rpart.plot)
@@ -214,7 +214,7 @@ mean(diags)
 
 ```
 
-Here, I found the mean squared error (MSE), which was 93.06924. The smaller the number the better, so this number was not necessarily great. I then ran a k-fold CV on this same model, which had a value of 17922.6. The MSE was higher in CV, which is not good, as it shows that there is over fitting. 
+Here, I found the mean squared error (MSE), which was 93.06924. The smaller the number the better, so this number was not necessarily great. I then ran a k-fold CV on this same model, which had a value in the 20 thousands. The MSE was higher in CV, which is not good, as it shows that there is over fitting. 
 
 ### Python 
 
@@ -232,7 +232,7 @@ print(r.starbucks)
 head(py$starbuckspy)
 
 ```
-Discussion
+To run the python code, we install the library reticulate. Then, we can name the dataset in python by putting "r." in front of it, and by printing it we can see it and the structure it has in python. Then, to bring it back to R, we can use "py$" in front of the python dataset name. 
 
 ### Concluding Remarks
 
