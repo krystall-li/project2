@@ -60,7 +60,8 @@ highcals2 <- as.integer(as.factor(starbucks$highcals))
 starbucks <- starbucks %>% mutate(highcals2)
 starbucks %>% select(highcals) %>% filter(highcals2=="2") %>% summarize(n=n())
 starbucks %>% select(highcals) %>% filter(highcals2=="1") %>% summarize(n=n())
-starbucks %>% head()
+starbucks<-starbucks %>% select(item:highcals2)
+head(starbucks)
 ```
 
 ### Cluster Analysis
@@ -218,14 +219,17 @@ Here, I found the mean squared error (MSE), which was 93.06924. The smaller the 
 ### Python 
 
 ```{R}
+library(reticulate)
 
 ```
 
 ```{python}
-
+starbuckspy = r.starbucks
+print(r.starbucks)
 ```
 
 ```{R}
+head(py$starbuckspy)
 
 ```
 Discussion
